@@ -1,0 +1,59 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jenkins-cert
+  namespace: istio-system # istio 설치경로
+spec:
+  secretName: jenkins-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: jenkins.ops.cluster.yanychoi.site
+  dnsNames:
+  - jenkins.ops.cluster.yanychoi.site
+---
+#Gateway
+kind: Gateway
+apiVersion: networking.istio.io/v1beta1
+metadata:
+  name: jenkins-gw
+  namespace: jenkins
+spec:
+  servers:
+    - hosts:
+        - jenkins.ops.cluster.yanychoi.site
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: jenkins-tls
+        mode: SIMPLE
+    - hosts:
+        - jenkins.ops.cluster.yanychoi.site
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+  selector:
+    app: istio-ingressgateway
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: jenkins-vs
+  namespace: jenkins
+spec:
+  hosts:
+  - jenkins.ops.cluster.yanychoi.site
+  gateways:
+  - jenkins-gw
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        port:
+          number: 8080
+        host: jenkins
