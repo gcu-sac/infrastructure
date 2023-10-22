@@ -19,34 +19,34 @@ Vagrant.configure("2") do |config|
       subconfig.vm.network "forwarded_port", guest: 22, host: 50030, auto_correct: true, id: "ssh"
       subconfig.vm.provision "shell", path: "nfs/nfs.sh"
     end
-    config.vm.define "master" do |subconfig|
+    config.vm.define "m" do |subconfig|
       subconfig.vm.box = BOX_IMAGE
       subconfig.vm.provider "virtualbox" do |vb|
         vb.customize ["modifyvm", :id, "--groups", "/k8s-lab"]
         vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-        vb.name = "master"
+        vb.name = "m"
         vb.memory = 4096 # Set memory to 4 GB
         vb.cpus = 4 # Set to 4 vCPUs
         vb.linked_clone = true
       end
-      subconfig.vm.hostname = "master" # Set the hostname
+      subconfig.vm.hostname = "m" # Set the hostname
       subconfig.vm.synced_folder "./", "/vagrant", disabled: true
       subconfig.vm.network "private_network", ip: "192.168.10.10"
       subconfig.vm.network "forwarded_port", guest: 22, host: 50010, auto_correct: true, id: "ssh"
       subconfig.vm.provision "shell", path: "common/init.sh"
       subconfig.vm.provision "shell", path: "prod/master.sh"
       subconfig.vm.provision "shell", path: "prod/prod-nfs.sh"
-      subconfig.vm.provision "file", source: "ops/charts", destination: "$HOME/charts"
+      subconfig.vm.provision "file", source: "prod/charts", destination: "$HOME/charts"
     end
   (1..3).each do |i|
-    config.vm.define "worker-#{i}" do |subconfig|
+    config.vm.define "w-#{i}" do |subconfig|
       subconfig.vm.box = BOX_IMAGE
-      subconfig.vm.hostname = "worker-#{i}" # Set the hostname
+      subconfig.vm.hostname = "w-#{i}" # Set the hostname
       subconfig.vm.provider "virtualbox" do |vb|
         vb.customize ["modifyvm", :id, "--groups", "/k8s-lab"]
         vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-        vb.name = "worker-#{i}"
-        vb.memory = 4096 # Set memory to 4 GB
+        vb.name = "w-#{i}"
+        vb.memory = 8192 # Set memory to 8 GB
         vb.cpus = 4 # Set to 4 vCPUs
         vb.linked_clone = true
       end
@@ -58,41 +58,4 @@ Vagrant.configure("2") do |config|
       subconfig.vm.provision "shell", path: "prod/prod-nfs.sh"
     end
   end
-    config.vm.define "ops-m" do |subconfig|
-      subconfig.vm.box = BOX_IMAGE
-      subconfig.vm.provider "virtualbox" do |vb|
-        vb.customize ["modifyvm", :id, "--groups", "/k8s-lab"]
-        vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-        vb.name = "ops-m"
-        vb.memory = 2048 # Set memory to 2 GB
-        vb.cpus = 2 # Set to 2 vCPUs
-        vb.linked_clone = true
-      end
-      subconfig.vm.hostname = "ops-m" # Set the hostname
-      subconfig.vm.synced_folder "./", "/vagrant", disabled: true
-      subconfig.vm.network "private_network", ip: "192.168.10.20"
-      subconfig.vm.network "forwarded_port", guest: 22, host: 50020, auto_correct: true, id: "ssh"
-      subconfig.vm.provision "shell", path: "common/init.sh"
-      subconfig.vm.provision "shell", path: "ops/ops-master.sh"
-      subconfig.vm.provision "shell", path: "ops/ops-nfs.sh"
-      subconfig.vm.provision "file", source: "ops/charts", destination: "$HOME/charts"
-    end
-    config.vm.define "ops-w1" do |subconfig|
-      subconfig.vm.box = BOX_IMAGE
-      subconfig.vm.hostname = "ops-w1" # Set the hostname
-      subconfig.vm.provider "virtualbox" do |vb|
-        vb.customize ["modifyvm", :id, "--groups", "/k8s-lab"]
-        vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-        vb.name = "ops-w1"
-        vb.memory = 4096 # Set memory to 4 GB
-        vb.cpus = 4 # Set to 4 vCPUs
-        vb.linked_clone = true
-      end
-      subconfig.vm.synced_folder "./", "/vagrant", disabled: true
-      subconfig.vm.network "private_network", ip: "192.168.10.201"
-      subconfig.vm.network "forwarded_port", guest: 22, host: "50021", auto_correct: true, id: "ssh"
-      subconfig.vm.provision "shell", path: "common/init.sh"
-      subconfig.vm.provision "shell", path: "ops/ops-worker.sh"
-      subconfig.vm.provision "shell", path: "ops/ops-nfs.sh"
-    end
 end
