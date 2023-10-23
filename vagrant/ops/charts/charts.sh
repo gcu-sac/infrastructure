@@ -1,7 +1,4 @@
-helm repo add jenkinsci https://charts.jenkins.io
 helm repo add jetstack https://charts.jetstack.io
-
-helm install jenkins jenkinsci/jenkins -n jenkins --create-namespace --set persistence.storageClass=nfs-client
 
 helm install \
   cert-manager jetstack/cert-manager \
