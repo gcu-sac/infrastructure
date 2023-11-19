@@ -3,7 +3,7 @@
 echo ">>>> K8S Controlplane config Start <<<<"
 
 echo "[TASK 1] Initial Kubernetes - Pod CIDR 172.16.0.0/17 , API Server 192.168.10.10"
-kubeadm init --token 123456.1234567890123456 --token-ttl 0 --apiserver-advertise-address=192.168.10.10 --pod-network-cidr=172.16.0.0/17 --api-server-extra-sans "prod.cluster.yanychoi.site" >/dev/null 2>&1
+kubeadm init --token 123456.1234567890123456 --token-ttl 0 --pod-network-cidr=172.16.0.0/17 --apiserver-advertise-address=192.168.10.10 --apiserver-cert-extra-sans=prod.cluster.yanychoi.site,192.168.10.10 --skip-phases=addon/kube-proxy
 
 echo "[TASK 2] Setting kube config file"
 mkdir -p $HOME/.kube
@@ -20,7 +20,7 @@ sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin >/dev/null 2>/dev/
 rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
 
 echo "[TASK 4] Install Cilium"
-cilium install --version 1.14.1 --set ipam.mode=kubernetes --set k8s.requireIPv4PodCIDR=true >/dev/null 2>/dev/null
+cilium install --version 1.14.3 --set ipam.mode=kubernetes --set k8s.requireIPv4PodCIDR=true --set kubeProxyReplacement=true --set k8sServiceHost="192.168.10.10" --set k8sServicePort="6443" --namespace kube-system >/dev/null 2>/dev/null
 
 echo "[TASK 5] Source the completion"
 # source bash-completion for kubectl kubeadm
@@ -63,14 +63,7 @@ curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | 
 echo "[TASK 11] Install Metrics server - v0.6.1"
 kubectl apply -f https://raw.githubusercontent.com/gasida/KANS/main/8/metrics-server.yaml >/dev/null 2>&1
 
-echo "[TASK 12] Install Istio"
-kubectl taint node master node-role.kubernetes.io/control-plane-
-curl -L https://istio.io/downloadIstio | sh - >/dev/null 2>/dev/null
-cd istio-1.19.0
-export PATH=$PWD/bin:$PATH
-istioctl install --set profile=demo -y
-
-echo "[TASK 13] Install k9s"
+echo "[TASK 12] Install k9s"
 wget https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz >/dev/null 2>/dev/null
 tar zxvf k9s_Linux_amd64.tar.gz >/dev/null 2>/dev/null
 chmod +x k9s

@@ -36,7 +36,7 @@ resolvconf -u
 echo "[TASK 7] Setting Local DNS Using Hosts file"
 echo "192.168.10.10 master" >> /etc/hosts
 echo "192.168.10.30 nfs" >> /etc/hosts
-for (( i=1; i<=3; i++  )); do echo "192.168.10.10$i worker-$i" >> /etc/hosts; done
+for (( i=1; i<=4; i++  )); do echo "192.168.10.10$i worker-$i" >> /etc/hosts; done
 
 echo "[TASK 8] Install Docker Engine"
 curl -fsSL https://get.docker.com | sh >/dev/null 2>&1
